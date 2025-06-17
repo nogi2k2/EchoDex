@@ -9,7 +9,7 @@ from pynput.keyboard import Key, Controller
 from PIL import ImageGrab
 
 class SystemTasks:
-    def __init___(self):
+    def __init__(self):
         self.keyboard = Controller()
 
     def write(self, text):
@@ -148,6 +148,32 @@ def take_note(text):
     sys_task.write(text)
     sys_task.save(f'note_{randint(1, 100)}')
 
-# def systemInfo():
-# def convert_size(size_bytes):
-# def system_stats():
+def systemInfo():
+    _wmi = wmi.WMI()
+    my_system_1 = _wmi.Win32_LogicalDisk()[0]
+    my_system_2 = _wmi.Win32_ComputerSystem()[0]
+    info = f"Total Disk Space: {round(int(my_system_1.Size)/(1024**3), 2)} GB\n"\
+            f"Free Disk Space: {round(int(my_system_1.Freespace)/(1024**3), 2)} GB\n"\
+            f"Manufacturer: {my_system_2.Manufacturer}\n"\
+            f"Model: {my_system_2.Model}\n"\
+            f"Owner: {my_system_2.PrimaryOwnerName}\n"\
+            f"Processor Count: {psutil.cpu_count()}\n"\
+            f"System Type: {my_system_2.SystemType}"
+    return info
+
+def convert_size(size_bytes):
+    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    if size_bytes == 0:
+        return "OB"
+    index = int(math.floor(math.log(size_bytes, 1024)))
+    size = round((size_bytes)/ (math.pow(1024, index)), 2)
+    return f"{str(size)} {size_name[index]}"
+
+def system_stats():
+    cpu_stats = str(psutil.cpu_percent())
+    battery_percent = psutil.sensors_battery().percent
+    mem_in_use = convert_size(psutil.virtual_memory().used)
+    total_mem = convert_size(psutil.virtual_memory().total)
+    stats = f"Currently {cpu_stats} percent of CPU, {mem_in_use} of RAM out of total {total_mem} is being used and " \
+                f"battery level is at {battery_percent}%"
+    return stats
