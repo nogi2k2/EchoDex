@@ -10,7 +10,7 @@ load_dotenv(dotenv_path = '..\\Data\\.env')
 
 NEWS = os.getenv('NEWS_API')
 WOLFRAMALPHA = os.getenv('WOLFRAMALPHA_API')
-OPENWEATHERMAP = os.getenv('OPENWEATHERMAP_API')
+WEATHERAPI = os.getenv('OPENWEATHERMAP_API')
 TMDB = os.getenv('TMDB_API')
 news = NewsApiClient(api_key = NEWS)
 
@@ -40,21 +40,26 @@ def get_news():
         return top_news
     except (KeyboardInterrupt, requests.exceptions.RequestException) as e:
         return None
-    
-def get_weather(city = ''):
+
+def get_weather(city=''):
     try:
-        if city:
-            response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={OPENWEATHERMAP}&units=metric').json()
-        else:
-            response = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={get_ip(True)["city"]}&appid={OPENWEATHERMAP}&units=metric').json()
-        weather =  f"It\'s {response["main"]["temp"]}° Celsius and {response["weather"][0]["main"]}\n" \ 
-        f"But feels like {response["main"]["feels_like"]}° Celsius\n" \
-        f"Wind is blowing at {round(response["wind"]["speed"] * 3.6, 2)}km/h\n" \
-        f"Visibility is {int(response["visibility"]/1000)}km"
+        if not city:
+            city = get_ip(True)['city']
+        url = f"http://api.weatherapi.com/v1/current.json?key={WEATHERAPI}&q={city}"
+        response = requests.get(url).json()
+        if 'error' in response:
+            return "Could not fetch weather for the location."
+        current = response['current']
+        weather = (
+            f"It's {current['temp_c']}° Celsius and {current['text']}\n"
+            f"But feels like {current['feelslike_c']}° Celsius\n"
+            f"Wind is blowing at {current['wind_kph']} km/h\n"
+            f"Visibility is {current['vis_km']} km"
+        )
         return weather
-    except (KeyboardInterrupt, requests.exceptions.RequestException) as e:
+    except (KeyboardInterrupt, requests.exceptions.RequestException):
         return None
-    
+
 def get_popular_movies():
     try:
         response = requests.get(f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB}&region=IN&sort_by=popularity.desc&"
