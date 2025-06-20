@@ -1,61 +1,59 @@
-try:
-    import os
-    import logging
-    import pyttsx3
-    logging.disable(logging.WARNING)
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    from keras_preprocessing.sequence import pad_sequences
-    import numpy as np
-    from keras.models import load_model
-    from pickle import load
-    import speech_recognition as sr
-    import sys
+import os
+import logging
+logging.disable(logging.WARNING)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+from keras_preprocessing.sequence import pad_sequences
+import numpy as np
+from keras.models import load_model
+from pickle import load
+import speech_recognition as sr
+import win32com.client
+import sys
 
-    sys.path.enter(0, os.path.expanduser('~')+"/EchoDex")
+sys.path.insert(0, os.path.expanduser('~')+"/EchoDex")
 
-    from database import *
-    from image_generation import * 
-    from gmail import *
-    from API_functionalities import *
-    from system_operations import *
-    from browsing_functionalities import *
+from database import *
+from image_generation import * 
+from gmail import *
+from API_functionalities import *
+from system_operations import *
+from browsing_functionalities import *
 
-except (KeyboardInterrupt, SystemError, ImportError, Exception) as e:
-    print("Error while importing the modules")
-    exit(0)
-
-recognizer = sr.recognizer()
-engine = pyttsx3.init()
-engine.setProperty("rate", 185)
-
-voices = engine.getProperty("voices")
-for voice in voices:
-    if 'zira' in voice.name.lower():
-        engine.setProperty("voice", voice.id)
-        break
-
+recognizer = sr.Recognizer()
+speaker = win32com.client.Dispatch("SAPI.SpVoice")
 sys_ops = SystemTasks()
 tab_ops = TabOpt()
 win_ops = WindowOpt()
 
-model = load_model('..\\Data\\chat_model')
-with open('..\\Data\\tokenizer.pickle', 'rb') as handle:
+for voice in speaker.GetVoices():
+    if "zira" in voice.GetDescription().lower():
+        speaker.Voice = voice
+        break
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, 'Data', 'chat_model')
+TOKENIZER_PATH = os.path.join(BASE_DIR, 'Data', 'tokenizer.pickle')
+ENCODER_PATH = os.path.join(BASE_DIR, 'Data', 'label_encoder.pickle')
+
+model = load_model(MODEL_PATH)
+with open(TOKENIZER_PATH, 'rb') as handle:
     tokenizer = load(handle)
-with open('..\\Data\\label_encoder.pickle', 'rb') as enc:
+with open(ENCODER_PATH, 'rb') as enc:
     lbl_encoder = load(enc)
 
 def speak(text):
+    print()
     print("Assistant -> " + text)
     try:
-        engine.say(text)
-        engine.runAndWait()
+        speaker.Speak(text)
     except KeyboardInterrupt or RuntimeError:
         return
     
 def chat(text):
     max_len = 20
     while True:
-        result = model.predict(pad_sequences(tokenizer.texts_to_sequences([text]), max_len = max_len, truncating = 'post'))
+        result = model.predict(pad_sequences(tokenizer.texts_to_sequences([text]),
+                                                                          truncating='post', maxlen=max_len), verbose=False)
         intent = lbl_encoder.inverse_transform([np.argmax(result)])[0]
         return intent
     
