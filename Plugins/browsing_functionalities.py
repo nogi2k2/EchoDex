@@ -2,7 +2,7 @@ import webbrowser
 import re
 import wikipedia
 import speedtest
-from youtubesearchpython import VideoSearch
+from youtubesearchpython import VideosSearch
 import websites
 
 def cleaned_query(query):
@@ -23,9 +23,9 @@ def youtube(query):
     query = re.sub(pattern, ' ', query, flags = re.IGNORECASE)
     query = re.sub(r'\s+', ' ', query).strip()
     print("Video lookup in progress")
-    videoSearch = VideoSearch(query, limit = 1)
+    videoSearch = VideosSearch(query, limit = 1)
     result = videoSearch.result()['result'][0]['id']
-    webbrowser.open(f"https://www.youtube.com/watch?v="{query})
+    webbrowser.open(f"https://www.youtube.com/watch?v={query}")
     return f"Opening Youtube Video"
 
 def open_specified_website(query):
