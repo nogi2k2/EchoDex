@@ -1,6 +1,9 @@
 import sqlite3
+import os
 
-conn = sqlite3.connect('../Data/chats/db')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_PATH = os.path.join(BASE_DIR, 'Data', 'chats.db')
+conn = sqlite3.connect(DATA_PATH)
 cursor = conn.cursor()
 
 def add_data(query):
@@ -12,7 +15,7 @@ def add_data(query):
 def get_data():
     data = cursor.execute("SELECT * FROM ASSISTANT")
     table_head = []
-    for column in data.desription:
+    for column in data.description:
         table_head.append(column[0])
     print("{:<14} {:<79} {:<20}".format(table_head[0], table_head[1], table_head[2]))
     print()
